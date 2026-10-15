@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Sdamgia PDF Cleaner",
+  "version": "1.5.0",
+  "description": "Убирает шапку и ватермарки с сайтов Сдам ГИА, открывает печать в чистый PDF и добавляет меню настроек.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "sdamgia-pdf-cleaner@hobilogz",
+      "strict_min_version": "109.0"
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.sdamgia.ru/*"
+  ],
+  "action": {
+    "default_title": "Настройки Sdamgia PDF Cleaner",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.sdamgia.ru/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

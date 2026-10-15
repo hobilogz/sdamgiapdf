@@ -1,0 +1,46 @@
+# ==============================================================================
+# Security & Privacy (CRITICAL - DO NOT REMOVE)
+# ==============================================================================
+# Private keys and certificates
+*.pem
+*.key
+*.pfx
+*.cer
+*.crt
+
+# Internal workspace prompts and notes
+task.txt
+task2.txt
+*.log
+scratch/
+.system_generated/
+.user_uploaded/
+temp/
+test_*.html
+test_*.txt
+
+# OS-generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Editor & IDE configurations
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Local temporary archives (root zip/crx, keep only dist/)
+/sdamgia-pdf-cleaner.zip
+/sdamgia-pdf-cleaner.crx
+/sdamgia-pdf-cleaner/
+push_to_github.bat
+
