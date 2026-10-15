@@ -248,52 +248,144 @@
     }
   }
 
-  /**
-   * Настройка стандартного имени файла для сохранения PDF
-   */
-  function adjustDocumentTitle() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const variantId = urlParams.get('id') || '';
-    let title = 'Вариант_СдамГИА';
-
-    if (variantId) {
-      title = `Вариант_${variantId}`;
-    }
-
-    document.title = title;
+  function getFormattedDate() {
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yyyy = now.getFullYear();
+    return `${dd}.${mm}.${yyyy}`;
   }
 
+  function getVariantId() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('id') || '';
+  }
+
+  function setCheckbox(id, checked) {
+    let cb = document.getElementById(id);
+    if (!cb) {
+      const labels = document.querySelectorAll('label');
+      for (const lbl of labels) {
+        const text = lbl.textContent || '';
+        if ((id === 'cb_num' && (text.includes('№№ заданий') || text.includes('№ заданий'))) ||
+            (id === 'cb_sol' && text.includes('Решения')) ||
+            (id === 'cb_ans' && text.includes('Ответы')) ||
+            (id === 'cb_key' && text.includes('Ключ'))) {
+          cb = lbl.querySelector('input[type="checkbox"]');
+          if (cb) break;
+        }
+      }
+    }
+    if (cb && cb.checked !== checked) {
+      cb.checked = checked;
+      cb.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  let buttonMode = 'student'; // 'student' или 'teacher'
+
   /**
-   * Подготовка и запуск сохранения в чистый PDF
+   * Подготовка и сохранение варианта ученика
    */
-  async function cleanAndSavePDF() {
+  async function saveStudentPDF() {
     const btn = document.getElementById('sdamgia-clean-pdf-btn');
     if (btn) btn.style.display = 'none';
 
     try {
-      uncheckTaskNumbers(false);
-      adjustDocumentTitle();
+      // 1. Выключаем номера заданий, решения, ответы, ключ
+      setCheckbox('cb_num', false);
+      setCheckbox('cb_sol', false);
+      setCheckbox('cb_ans', false);
+      setCheckbox('cb_key', false);
 
-      // Очищаем ватермарки (ЕГЭ, ОГЭ, ВПР) с картинок перед печатью
+      // 2. Имя файла: просто дата создания/скачки (например, 15.10.2026)
+      document.title = getFormattedDate();
+
+      // 3. Очистка ватермарок и шапки
       if (currentSettings.cleanWatermark) {
         await cleanAllWatermarks();
       }
-
-      await sleep(120);
+      await sleep(100);
       removeSdamgiaHeader();
-      await sleep(120);
+      await sleep(100);
 
-      // Запуск нативного диалога печати браузера
       window.print();
-    } catch (error) {
-      console.error('[Sdamgia PDF Cleaner] Ошибка:', error);
+    } catch (err) {
+      console.error('[Sdamgia PDF Cleaner] Ошибка сохранения варианта ученика:', err);
+      window.print();
+    } finally {
+      // Переключаем кнопку в режим учителя
+      buttonMode = 'teacher';
+      updateButtonAppearance();
+      if (btn) {
+        setTimeout(() => {
+          btn.style.display = 'inline-flex';
+        }, 600);
+      }
+    }
+  }
+
+  /**
+   * Подготовка и сохранение варианта учителя
+   */
+  async function saveTeacherPDF() {
+    const btn = document.getElementById('sdamgia-clean-pdf-btn');
+    if (btn) btn.style.display = 'none';
+
+    try {
+      // 1. Включаем номера заданий, решения, ответы, ключ
+      setCheckbox('cb_num', true);
+      setCheckbox('cb_sol', true);
+      setCheckbox('cb_ans', true);
+      setCheckbox('cb_key', true);
+
+      // 2. Имя файла: Вариант_<номер>_<дата>
+      const vid = getVariantId();
+      document.title = vid ? `Вариант_${vid}_${getFormattedDate()}` : `Вариант_${getFormattedDate()}`;
+
+      // 3. Очистка ватермарок (в том числе в появившихся решениях)
+      if (currentSettings.cleanWatermark) {
+        await cleanAllWatermarks();
+      }
+      await sleep(100);
+      removeSdamgiaHeader();
+      await sleep(100);
+
+      window.print();
+    } catch (err) {
+      console.error('[Sdamgia PDF Cleaner] Ошибка сохранения варианта учителя:', err);
       window.print();
     } finally {
       if (btn) {
         setTimeout(() => {
           btn.style.display = 'inline-flex';
-        }, 800);
+        }, 600);
       }
+    }
+  }
+
+  function updateButtonAppearance() {
+    const btn = document.getElementById('sdamgia-clean-pdf-btn');
+    if (!btn) return;
+
+    if (buttonMode === 'student') {
+      btn.className = 'no_print sdamgia-pdf-no-print sdamgia-mode-student';
+      btn.title = 'Сохранить чистый вариант ученика (без решений, ответов и номеров каталога)';
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+        </svg>
+        <span>Сохранить вариант ученика</span>
+      `;
+    } else {
+      btn.className = 'no_print sdamgia-pdf-no-print sdamgia-mode-teacher';
+      btn.title = 'Сохранить вариант учителя (с решениями, ответами, ключом и номерами заданий)';
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+        </svg>
+        <span>Сохранить вариант учителя</span>
+      `;
     }
   }
 
@@ -322,7 +414,6 @@
           display: inline-flex;
           align-items: center;
           gap: 9px;
-          background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
           color: #ffffff !important;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
           font-size: 14px;
@@ -332,20 +423,33 @@
           padding: 11px 18px;
           border-radius: 24px;
           border: 1px solid rgba(255, 255, 255, 0.25);
-          box-shadow: 0 4px 14px rgba(13, 71, 161, 0.38), 0 2px 6px rgba(0, 0, 0, 0.15);
           cursor: pointer;
           user-select: none;
           text-decoration: none !important;
-          transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.25s ease;
         }
-        #sdamgia-clean-pdf-btn:hover {
-          background: linear-gradient(135deg, #2196f3 0%, #1565c0 100%);
+        /* Стиль для варианта ученика — благородный синий */
+        #sdamgia-clean-pdf-btn.sdamgia-mode-student {
+          background: linear-gradient(135deg, #1d4ed8 0%, #0d47a1 100%);
+          box-shadow: 0 4px 14px rgba(13, 71, 161, 0.38), 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+        #sdamgia-clean-pdf-btn.sdamgia-mode-student:hover {
+          background: linear-gradient(135deg, #2563eb 0%, #1565c0 100%);
           box-shadow: 0 6px 20px rgba(13, 71, 161, 0.48), 0 3px 8px rgba(0, 0, 0, 0.2);
+          transform: translateY(-2px);
+        }
+        /* Стиль для варианта учителя — стильный изумрудно-хвойный */
+        #sdamgia-clean-pdf-btn.sdamgia-mode-teacher {
+          background: linear-gradient(135deg, #059669 0%, #047857 100%);
+          box-shadow: 0 4px 14px rgba(4, 120, 87, 0.38), 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+        #sdamgia-clean-pdf-btn.sdamgia-mode-teacher:hover {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          box-shadow: 0 6px 20px rgba(4, 120, 87, 0.48), 0 3px 8px rgba(0, 0, 0, 0.2);
           transform: translateY(-2px);
         }
         #sdamgia-clean-pdf-btn:active {
           transform: translateY(0);
-          box-shadow: 0 2px 8px rgba(13, 71, 161, 0.35);
         }
         #sdamgia-clean-pdf-btn svg {
           flex-shrink: 0;
@@ -359,27 +463,22 @@
 
     const btn = document.createElement('button');
     btn.id = 'sdamgia-clean-pdf-btn';
-    btn.className = 'no_print sdamgia-pdf-no-print';
     btn.type = 'button';
-    btn.title = 'Очистить шапку варианта, удалить ватермарки и сохранить чистый PDF';
-    btn.innerHTML = `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-      </svg>
-      <span>Сохранить чистый PDF</span>
-    `;
 
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       const span = btn.querySelector('span');
       if (span) span.textContent = 'Подготовка...';
-      cleanAndSavePDF().finally(() => {
-        if (span) span.textContent = 'Сохранить чистый PDF';
-      });
+      if (buttonMode === 'student') {
+        saveStudentPDF();
+      } else {
+        saveTeacherPDF();
+      }
     });
 
     document.body.appendChild(btn);
+    updateButtonAppearance();
   }
 
   function checkAndInject() {
