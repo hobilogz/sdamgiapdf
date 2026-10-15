@@ -314,14 +314,8 @@
       console.error('[Sdamgia PDF Cleaner] Ошибка сохранения варианта ученика:', err);
       window.print();
     } finally {
-      // Переключаем кнопку в режим учителя
-      buttonMode = 'teacher';
-      updateButtonAppearance();
-      if (btn) {
-        setTimeout(() => {
-          btn.style.display = 'inline-flex';
-        }, 600);
-      }
+      const span = document.querySelector('#sdamgia-btn-student span');
+      if (span) span.textContent = 'Вариант ученика';
     }
   }
 
@@ -329,9 +323,6 @@
    * Подготовка и сохранение варианта учителя
    */
   async function saveTeacherPDF() {
-    const btn = document.getElementById('sdamgia-clean-pdf-btn');
-    if (btn) btn.style.display = 'none';
-
     try {
       // 1. Включаем номера заданий, решения, ответы, ключ
       setCheckbox('cb_num', true);
@@ -356,129 +347,129 @@
       console.error('[Sdamgia PDF Cleaner] Ошибка сохранения варианта учителя:', err);
       window.print();
     } finally {
-      if (btn) {
-        setTimeout(() => {
-          btn.style.display = 'inline-flex';
-        }, 600);
-      }
-    }
-  }
-
-  function updateButtonAppearance() {
-    const btn = document.getElementById('sdamgia-clean-pdf-btn');
-    if (!btn) return;
-
-    if (buttonMode === 'student') {
-      btn.className = 'no_print sdamgia-pdf-no-print sdamgia-mode-student';
-      btn.title = 'Сохранить чистый вариант ученика (без решений, ответов и номеров каталога)';
-      btn.innerHTML = `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
-        </svg>
-        <span>Сохранить вариант ученика</span>
-      `;
-    } else {
-      btn.className = 'no_print sdamgia-pdf-no-print sdamgia-mode-teacher';
-      btn.title = 'Сохранить вариант учителя (с решениями, ответами, ключом и номерами заданий)';
-      btn.innerHTML = `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-        </svg>
-        <span>Сохранить вариант учителя</span>
-      `;
+      const span = document.querySelector('#sdamgia-btn-teacher span');
+      if (span) span.textContent = 'Вариант учителя';
     }
   }
 
   /**
-   * Внедрение красивой плавающей кнопки в правый верхний угол
+   * Внедрение двух удобных кнопок в правый верхний угол (Ученик и Учитель)
    */
   function injectDownloadButton() {
-    if (document.getElementById('sdamgia-clean-pdf-btn')) return;
+    if (document.getElementById('sdamgia-clean-pdf-panel')) return;
 
     if (!document.getElementById('sdamgia-clean-pdf-styles')) {
       const styleTag = document.createElement('style');
       styleTag.id = 'sdamgia-clean-pdf-styles';
       styleTag.textContent = `
         @media print {
-          #sdamgia-clean-pdf-btn,
+          #sdamgia-clean-pdf-panel,
           .sdamgia-pdf-no-print {
             display: none !important;
             visibility: hidden !important;
           }
         }
-        #sdamgia-clean-pdf-btn {
+        #sdamgia-clean-pdf-panel {
           position: fixed;
           top: 16px;
           right: 20px;
           z-index: 2147483647;
           display: inline-flex;
           align-items: center;
-          gap: 9px;
+          gap: 10px;
+        }
+        .sdamgia-action-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
           color: #ffffff !important;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-          font-size: 14px;
+          font-size: 13.5px;
           font-weight: 600;
           letter-spacing: 0.2px;
           line-height: 1;
-          padding: 11px 18px;
-          border-radius: 24px;
+          padding: 10px 16px;
+          border-radius: 22px;
           border: 1px solid rgba(255, 255, 255, 0.25);
           cursor: pointer;
           user-select: none;
           text-decoration: none !important;
-          transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.25s ease;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.2s ease;
         }
-        /* Стиль для варианта ученика — благородный синий */
-        #sdamgia-clean-pdf-btn.sdamgia-mode-student {
+        .sdamgia-btn-student {
           background: linear-gradient(135deg, #1d4ed8 0%, #0d47a1 100%);
           box-shadow: 0 4px 14px rgba(13, 71, 161, 0.38), 0 2px 6px rgba(0, 0, 0, 0.15);
         }
-        #sdamgia-clean-pdf-btn.sdamgia-mode-student:hover {
+        .sdamgia-btn-student:hover {
           background: linear-gradient(135deg, #2563eb 0%, #1565c0 100%);
-          box-shadow: 0 6px 20px rgba(13, 71, 161, 0.48), 0 3px 8px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 6px 18px rgba(13, 71, 161, 0.48), 0 3px 8px rgba(0, 0, 0, 0.2);
           transform: translateY(-2px);
         }
-        /* Стиль для варианта учителя — стильный изумрудно-хвойный */
-        #sdamgia-clean-pdf-btn.sdamgia-mode-teacher {
+        .sdamgia-btn-teacher {
           background: linear-gradient(135deg, #059669 0%, #047857 100%);
           box-shadow: 0 4px 14px rgba(4, 120, 87, 0.38), 0 2px 6px rgba(0, 0, 0, 0.15);
         }
-        #sdamgia-clean-pdf-btn.sdamgia-mode-teacher:hover {
+        .sdamgia-btn-teacher:hover {
           background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-          box-shadow: 0 6px 20px rgba(4, 120, 87, 0.48), 0 3px 8px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 6px 18px rgba(4, 120, 87, 0.48), 0 3px 8px rgba(0, 0, 0, 0.2);
           transform: translateY(-2px);
         }
-        #sdamgia-clean-pdf-btn:active {
+        .sdamgia-action-btn:active {
           transform: translateY(0);
         }
-        #sdamgia-clean-pdf-btn svg {
+        .sdamgia-action-btn svg {
           flex-shrink: 0;
-          width: 18px;
-          height: 18px;
+          width: 17px;
+          height: 17px;
           fill: currentColor;
         }
       `;
       (document.head || document.documentElement).appendChild(styleTag);
     }
 
-    const btn = document.createElement('button');
-    btn.id = 'sdamgia-clean-pdf-btn';
-    btn.type = 'button';
+    const panel = document.createElement('div');
+    panel.id = 'sdamgia-clean-pdf-panel';
+    panel.className = 'no_print sdamgia-pdf-no-print';
 
-    btn.addEventListener('click', (e) => {
+    const downloadIconSvg = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+      </svg>
+    `;
+
+    // 1. Кнопка "Вариант ученика"
+    const btnStudent = document.createElement('button');
+    btnStudent.id = 'sdamgia-btn-student';
+    btnStudent.type = 'button';
+    btnStudent.className = 'sdamgia-action-btn sdamgia-btn-student';
+    btnStudent.title = 'Сохранить чистый вариант ученика (без решений, ответов и номеров заданий каталога)';
+    btnStudent.innerHTML = `${downloadIconSvg}<span>Вариант ученика</span>`;
+    btnStudent.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const span = btn.querySelector('span');
+      const span = btnStudent.querySelector('span');
       if (span) span.textContent = 'Подготовка...';
-      if (buttonMode === 'student') {
-        saveStudentPDF();
-      } else {
-        saveTeacherPDF();
-      }
+      saveStudentPDF();
     });
 
-    document.body.appendChild(btn);
-    updateButtonAppearance();
+    // 2. Кнопка "Вариант учителя"
+    const btnTeacher = document.createElement('button');
+    btnTeacher.id = 'sdamgia-btn-teacher';
+    btnTeacher.type = 'button';
+    btnTeacher.className = 'sdamgia-action-btn sdamgia-btn-teacher';
+    btnTeacher.title = 'Сохранить вариант учителя (с решениями, ответами, ключом и номерами заданий)';
+    btnTeacher.innerHTML = `${downloadIconSvg}<span>Вариант учителя</span>`;
+    btnTeacher.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const span = btnTeacher.querySelector('span');
+      if (span) span.textContent = 'Подготовка...';
+      saveTeacherPDF();
+    });
+
+    panel.appendChild(btnStudent);
+    panel.appendChild(btnTeacher);
+    document.body.appendChild(panel);
   }
 
   function checkAndInject() {
