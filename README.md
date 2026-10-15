@@ -2,7 +2,7 @@
 
 # 📑 Sdamgia PDF Cleaner
 
-**Умное браузерное расширение для подготовки и экспорта вариантов заданий образовательного портала «Сдам ГИА» в чистый, безупречный PDF-документ.**
+**Умное браузерное расширение для подготовки и экспорта вариантов заданий образовательного портала «Сдам ГИА» в чистый, безупречный PDF-документ»**
 
 [![Version](https://img.shields.io/badge/version-1.5.0-blue.svg?style=for-the-badge)](https://github.com/hobilogz/sdamgiapdf/releases)
 [![Manifest](https://img.shields.io/badge/Manifest-V3-success.svg?style=for-the-badge)](https://developer.chrome.com/docs/extensions/mv3/intro/)
