@@ -298,8 +298,18 @@
       setCheckbox('cb_ans', false);
       setCheckbox('cb_key', false);
 
-      // 2. Имя файла: просто дата создания/скачки (например, 15.10.2026)
-      document.title = getFormattedDate();
+      // 2. Имя файла: дата создания + последние две цифры номера варианта (например, 15.10.2026_69)
+      const vid = getVariantId();
+      let suffix = '';
+      if (vid) {
+        const digits = vid.replace(/\D/g, '');
+        if (digits.length >= 2) {
+          suffix = '_' + digits.slice(-2);
+        } else if (digits.length > 0) {
+          suffix = '_' + digits;
+        }
+      }
+      document.title = `${getFormattedDate()}${suffix}`;
 
       // 3. Очистка ватермарок и шапки
       if (currentSettings.cleanWatermark) {
